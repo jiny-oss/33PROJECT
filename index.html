@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#f5f0e6" />
+  <title>33PROJECT — Handmade Objects</title>
+  <style>
+    :root{
+      --cream:#f5f0e6;
+      --paper:#fbf7ef;
+      --ink:#2f302c;
+      --muted:#77766f;
+      --line:rgba(47,48,44,.16);
+      --yarn:#9a7458;
+      --yarn-soft:#c8a98f;
+      --blue:#aebfc8;
+      --sage:#b4b49c;
+      --butter:#d7c98f;
+      --needle:#80817f;
+      --card:#f8f3ea;
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      background:var(--cream);
+      color:var(--ink);
+      font-family:Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      overflow-x:hidden;
+    }
+
+    a{color:inherit;text-decoration:none}
+    button{font:inherit;color:inherit}
+
+    .site-shell{min-height:100vh;background:var(--cream)}
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:30;
+      display:grid;
+      grid-template-columns:1fr auto 1fr;
+      align-items:center;
+      gap:24px;
+      min-height:76px;
+      padding:0 34px;
+      border-bottom:1px solid var(--line);
+      background:rgba(245,240,230,.92);
+      backdrop-filter:blur(16px);
+    }
+
+    .brand{
+      font-size:14px;
+      letter-spacing:.12em;
+      font-weight:700;
+    }
+
+    .nav{
+      display:flex;
+      align-items:center;
+      gap:28px;
+      font-size:12px;
+      letter-spacing:.12em;
+    }
+
+    .bag{
+      justify-self:end;
+      font-size:12px;
+      letter-spacing:.10em;
+    }
+
+    .hero{
+      position:relative;
+      display:grid;
+      grid-template-columns:minmax(0,1.28fr) minmax(360px,.92fr);
+      min-height:720px;
+      border-bottom:1px solid var(--line);
+    }
+
+    .interactive-stage{
+      position:relative;
+      min-width:0;
+      min-height:720px;
+      overflow:hidden;
+      border-right:1px solid var(--line);
+      background:
+        radial-gradient(circle at 33% 42%, rgba(255,255,255,.38), transparent 32%),
+        var(--cream);
+      cursor:none;
+      touch-action:pan-y;
+    }
+
+    .stage-kicker{
+      position:absolute;
+      top:34px;
+      left:34px;
+      z-index:5;
+      font-size:11px;
+      letter-spacing:.14em;
+      color:var(--muted);
+      text-transform:uppercase;
+    }
+
+    .stage-copy{
+      position:absolute;
+      left:34px;
+      bottom:36px;
+      z-index:5;
+      width:min(470px,calc(100% - 68px));
+    }
+
+    .stage-copy h1{
+      margin:0 0 16px;
+      font-family:Georgia, "Times New Roman", serif;
+      font-weight:400;
+      font-size:clamp(44px,7vw,94px);
+      line-height:.89;
+      letter-spacing:-.045em;
+    }
+
+    .stage-copy p{
+      margin:0;
+      max-width:420px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.65;
+    }
+
+    #yarnCanvas{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      pointer-events:none;
+      z-index:2;
+    }
+
+    .ghost33{
+      position:absolute;
+      inset:8% 5% 16% 6%;
+      z-index:1;
+      pointer-events:none;
+      opacity:.9;
+    }
+
+    .ghost33 svg{width:100%;height:100%;overflow:visible}
+    .ghost33 path{
+      fill:none;
+      stroke:rgba(154,116,88,.32);
+      stroke-width:7;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+      filter:drop-shadow(0 1px 0 rgba(255,255,255,.45));
+    }
+
+    .ghost33 path.thread-soft{
+      stroke:rgba(200,169,143,.28);
+      stroke-width:12;
+    }
+
+    .needle-cursor{
+      position:fixed;
+      width:72px;
+      height:28px;
+      z-index:80;
+      pointer-events:none;
+      transform:translate(-7px,-13px) rotate(-24deg);
+      transform-origin:7px 13px;
+      opacity:0;
+      transition:opacity .14s ease;
+      will-change:transform,left,top;
+    }
+
+    .needle{
+      position:absolute;
+      left:7px;
+      top:12px;
+      width:60px;
+      height:3px;
+      border-radius:999px;
+      background:linear-gradient(90deg,#646563,#9a9a96 52%,#d9d9d3);
+      box-shadow:0 1px 1px rgba(0,0,0,.12);
+    }
+
+    .needle:after{
+      content:"";
+      position:absolute;
+      right:-5px;
+      top:-2px;
+      width:8px;
+      height:7px;
+      clip-path:polygon(0 50%,100% 0,100% 100%);
+      background:#c9cac6;
+    }
+
+    .needle-loop{
+      position:absolute;
+      left:0;
+      top:7px;
+      width:15px;
+      height:15px;
+      border:2px solid var(--yarn);
+      border-radius:50%;
+      transform:rotate(18deg);
+      background:transparent;
+    }
+
+    .needle-loop:after{
+      content:"";
+      position:absolute;
+      right:-8px;
+      top:5px;
+      width:11px;
+      height:2px;
+      background:var(--yarn);
+      border-radius:999px;
+    }
+
+    .product-panel{
+      position:relative;
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+      background:var(--paper);
+    }
+
+    .product-panel-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:20px;
+      padding:28px 28px 24px;
+      border-bottom:1px solid var(--line);
+    }
+
+    .product-panel-head span{
+      font-size:11px;
+      letter-spacing:.14em;
+      color:var(--muted);
+    }
+
+    .product-panel-head strong{
+      font-size:12px;
+      letter-spacing:.12em;
+    }
+
+    .product-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      flex:1;
+    }
+
+    .product-card{
+      position:relative;
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+      padding:22px;
+      background:var(--card);
+      border-right:1px solid var(--line);
+      transition:background .25s ease;
+    }
+    .product-card:last-child{border-right:0}
+    .product-card:hover{background:#f1eadf}
+
+    .product-index{
+      font-size:10px;
+      letter-spacing:.14em;
+      color:var(--muted);
+      margin-bottom:18px;
+    }
+
+    .product-art{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-height:280px;
+      padding:12px 0 18px;
+    }
+
+    .product-art svg{
+      width:100%;
+      max-width:240px;
+      height:auto;
+      overflow:visible;
+    }
+
+    .product-meta{
+      margin-top:auto;
+      border-top:1px solid var(--line);
+      padding-top:18px;
+    }
+
+    .product-meta .kr{
+      margin:0 0 5px;
+      font-size:15px;
+      font-weight:650;
+    }
+
+    .product-meta .en{
+      margin:0 0 14px;
+      color:var(--muted);
+      font-size:10px;
+      letter-spacing:.11em;
+    }
+
+    .product-meta .price-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      font-size:12px;
+    }
+
+    .add-btn{
+      border:0;
+      background:transparent;
+      padding:10px 0 10px 16px;
+      cursor:pointer;
+      font-size:11px;
+      letter-spacing:.11em;
+    }
+
+    .about{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      min-height:380px;
+      border-bottom:1px solid var(--line);
+    }
+
+    .about-title,.about-copy{padding:54px 34px}
+    .about-title{border-right:1px solid var(--line)}
+
+    .eyebrow{
+      font-size:10px;
+      letter-spacing:.16em;
+      color:var(--muted);
+      text-transform:uppercase;
+      margin-bottom:26px;
+    }
+
+    .about h2{
+      margin:0;
+      max-width:620px;
+      font-family:Georgia, "Times New Roman", serif;
+      font-size:clamp(36px,5vw,64px);
+      font-weight:400;
+      line-height:1.02;
+      letter-spacing:-.035em;
+    }
+
+    .about-copy p{
+      margin:0;
+      max-width:560px;
+      font-size:14px;
+      line-height:1.85;
+      color:#5d5d58;
+    }
+
+    .footer{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:20px;
+      align-items:end;
+      padding:34px;
+      min-height:190px;
+    }
+
+    .footer small{
+      color:var(--muted);
+      font-size:10px;
+      letter-spacing:.12em;
+      line-height:1.8;
+    }
+
+    .back-top{
+      align-self:start;
+      font-size:11px;
+      letter-spacing:.12em;
+    }
+
+    .pop{
+      position:absolute;
+      left:0;
+      top:0;
+      z-index:7;
+      width:20px;
+      height:20px;
+      pointer-events:none;
+      transform:translate(-50%,-50%);
+    }
+
+    .pop .ring{
+      position:absolute;
+      inset:2px;
+      border:2px solid var(--yarn);
+      border-radius:50%;
+      animation:ringPop 900ms ease-out forwards;
+    }
+
+    .pop .spark{
+      position:absolute;
+      left:14px;
+      top:-7px;
+      font-size:13px;
+      color:#9c7b5b;
+      animation:sparkPop 900ms ease-out forwards;
+    }
+
+    @keyframes ringPop{
+      0%{transform:scale(.4) rotate(0);opacity:0}
+      35%{opacity:1}
+      100%{transform:scale(1.6) rotate(150deg);opacity:0}
+    }
+
+    @keyframes sparkPop{
+      0%{transform:translate(0,3px) scale(.5);opacity:0}
+      35%{opacity:1}
+      100%{transform:translate(9px,-10px) scale(1.15);opacity:0}
+    }
+
+    @media (max-width: 1050px){
+      .hero{grid-template-columns:1fr}
+      .interactive-stage{min-height:620px;border-right:0;border-bottom:1px solid var(--line)}
+      .product-panel{min-height:620px}
+      .product-grid{grid-template-columns:1fr 1fr}
+      .product-art{min-height:260px}
+    }
+
+    @media (max-width: 720px){
+      .topbar{
+        grid-template-columns:1fr auto;
+        min-height:66px;
+        padding:0 18px;
+      }
+      .nav{display:none}
+      .brand{font-size:12px}
+      .interactive-stage{
+        min-height:530px;
+        cursor:auto;
+      }
+      .stage-kicker{top:24px;left:20px}
+      .stage-copy{left:20px;bottom:24px;width:calc(100% - 40px)}
+      .stage-copy h1{font-size:58px}
+      .ghost33{inset:10% 0 19% 0}
+      .product-grid{grid-template-columns:1fr}
+      .product-card{border-right:0;border-bottom:1px solid var(--line)}
+      .product-card:last-child{border-bottom:0}
+      .product-art{min-height:250px}
+      .about{grid-template-columns:1fr}
+      .about-title{border-right:0;border-bottom:1px solid var(--line)}
+      .about-title,.about-copy{padding:38px 20px}
+      .footer{padding:28px 20px;grid-template-columns:1fr}
+      .needle-cursor{display:none}
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      html{scroll-behavior:auto}
+      .product-card{transition:none}
+      .pop .ring,.pop .spark{animation:none;opacity:0}
+    }
+  </style>
+</head>
+<body>
+  <div class="site-shell" id="top">
+    <header class="topbar">
+      <a class="brand" href="#top">33PROJECT</a>
+      <nav class="nav" aria-label="Primary navigation">
+        <a href="#shop">SHOP</a>
+        <a href="#story">STORY</a>
+      </nav>
+      <a class="bag" href="#shop">BAG( <span id="bagCount">0</span> )</a>
+    </header>
+
+    <main>
+      <section class="hero" id="shop">
+        <div class="interactive-stage" id="stage" aria-label="Interactive yarn illustration">
+          <div class="stage-kicker">01 — yarn, time & quiet hands</div>
+
+          <div class="ghost33" aria-hidden="true">
+            <svg viewBox="0 0 920 600">
+              <path class="thread-soft" id="soft33"
+                d="M210,120 C320,40 480,60 500,180 C515,270 430,310 350,310
+                   C430,300 520,345 500,445 C475,555 300,560 205,480
+                   M520,120 C630,40 790,60 810,180 C825,270 740,310 660,310
+                   C740,300 830,345 810,445 C785,555 610,560 515,480"/>
+              <path id="main33"
+                d="M210,120 C320,40 480,60 500,180 C515,270 430,310 350,310
+                   C430,300 520,345 500,445 C475,555 300,560 205,480
+                   M520,120 C630,40 790,60 810,180 C825,270 740,310 660,310
+                   C740,300 830,345 810,445 C785,555 610,560 515,480"/>
+            </svg>
+          </div>
+
+          <canvas id="yarnCanvas"></canvas>
+
+          <div class="stage-copy">
+            <h1>made<br/>by hand.</h1>
+            <p>
+              마우스를 움직여 보세요. 한 가닥의 실이 천천히 따라오며
+              33PROJECT의 숫자를 완성합니다.
+            </p>
+          </div>
+        </div>
+
+        <aside class="product-panel" aria-label="Products">
+          <div class="product-panel-head">
+            <span>PRODUCT</span>
+            <strong>33</strong>
+          </div>
+
+          <div class="product-grid">
+            <article class="product-card">
+              <div class="product-index">NEW · 01</div>
+              <div class="product-art" aria-hidden="true">
+                <svg viewBox="0 0 260 260">
+                  <defs>
+                    <filter id="softShadow1">
+                      <feDropShadow dx="0" dy="8" stdDeviation="8" flood-opacity=".12"/>
+                    </filter>
+                    <pattern id="stitch1" width="10" height="10" patternUnits="userSpaceOnUse">
+                      <path d="M0 6 Q5 0 10 6" fill="none" stroke="rgba(255,255,255,.42)" stroke-width="1.1"/>
+                    </pattern>
+                  </defs>
+                  <g filter="url(#softShadow1)">
+                    <path d="M54 155c-25-6-35-33-19-52 10-12 25-15 39-10 7-32 36-50 66-39 18 7 31 23 35 42 27-4 51 13 56 38 5 26-13 51-40 55H75c-7 0-14-1-21-4z"
+                          fill="#d9e1e2"/>
+                    <path d="M54 155c-25-6-35-33-19-52 10-12 25-15 39-10 7-32 36-50 66-39 18 7 31 23 35 42 27-4 51 13 56 38 5 26-13 51-40 55H75c-7 0-14-1-21-4z"
+                          fill="url(#stitch1)"/>
+                    <path d="M78 126c28-17 63-18 104-4M80 145c33-16 69-15 105-1M94 165c28-10 57-10 82-1"
+                          fill="none" stroke="rgba(117,134,139,.23)" stroke-width="2.2" stroke-linecap="round"/>
+                  </g>
+                </svg>
+              </div>
+              <div class="product-meta">
+                <p class="kr">구름 한 조각 쿠션</p>
+                <p class="en">CLOUD ROOM CUSHION</p>
+                <div class="price-row">
+                  <span>₩42,000</span>
+                  <button class="add-btn" type="button" data-add>ADD +</button>
+                </div>
+              </div>
+            </article>
+
+            <article class="product-card">
+              <div class="product-index">02</div>
+              <div class="product-art" aria-hidden="true">
+                <svg viewBox="0 0 260 260">
+                  <defs>
+                    <filter id="softShadow2">
+                      <feDropShadow dx="0" dy="8" stdDeviation="8" flood-opacity=".12"/>
+                    </filter>
+                    <pattern id="stitch2" width="9" height="9" patternUnits="userSpaceOnUse">
+                      <path d="M0 5 Q4.5 0 9 5" fill="none" stroke="rgba(255,255,255,.34)" stroke-width="1"/>
+                    </pattern>
+                  </defs>
+                  <g filter="url(#softShadow2)">
+                    <path d="M67 104c4-23 22-39 44-39h38c24 0 42 16 46 39l14 89c3 18-11 34-29 34H80c-18 0-32-16-29-34l16-89z"
+                          fill="#c8c39b"/>
+                    <path d="M67 104c4-23 22-39 44-39h38c24 0 42 16 46 39l14 89c3 18-11 34-29 34H80c-18 0-32-16-29-34l16-89z"
+                          fill="url(#stitch2)"/>
+                    <path d="M93 106c0-19 15-35 34-35s34 16 34 35"
+                          fill="none" stroke="#a79f73" stroke-width="10" stroke-linecap="round"/>
+                    <path d="M73 131h118M68 155h128M65 180h134"
+                          fill="none" stroke="rgba(113,108,77,.23)" stroke-width="2.2" stroke-linecap="round"/>
+                  </g>
+                </svg>
+              </div>
+              <div class="product-meta">
+                <p class="kr">곁에 두는 바스켓</p>
+                <p class="en">LITTLE THINGS BASKET</p>
+                <div class="price-row">
+                  <span>₩36,000</span>
+                  <button class="add-btn" type="button" data-add>ADD +</button>
+                </div>
+              </div>
+            </article>
+          </div>
+        </aside>
+      </section>
+
+      <section class="about" id="story">
+        <div class="about-title">
+          <div class="eyebrow">ABOUT OUR HANDS</div>
+          <h2>포근함을 만드는<br/>작은 프로젝트</h2>
+        </div>
+        <div class="about-copy">
+          <p>
+            33PROJECT는 매일 만지고 오래 곁에 두고 싶은 뜨개 리빙 오브젝트를 만듭니다.
+            빠르게 지나가는 물건보다, 손의 시간이 느껴지는 물건을 좋아해요.
+            조금씩 다른 모양과 실의 결까지 각 오브젝트가 가진 표정으로 남겨둡니다.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <small>
+        33PROJECT<br/>
+        SEOUL · SOUTH KOREA<br/>
+        © 2026 @33project
+      </small>
+      <a href="#top" class="back-top">BACK TO TOP ↑</a>
+    </footer>
+  </div>
+
+  <div class="needle-cursor" id="needleCursor" aria-hidden="true">
+    <span class="needle-loop"></span>
+    <span class="needle"></span>
+  </div>
+
+  <script>
+    (() => {
+      const stage = document.getElementById('stage');
+      const canvas = document.getElementById('yarnCanvas');
+      const ctx = canvas.getContext('2d');
+      const needleCursor = document.getElementById('needleCursor');
+      const main33 = document.getElementById('main33');
+      const soft33 = document.getElementById('soft33');
+      const bagCount = document.getElementById('bagCount');
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+      let dpr = Math.min(window.devicePixelRatio || 1, 2);
+      let points = [];
+      let target = {x: 0, y: 0};
+      let current = {x: 0, y: 0};
+      let lastInput = performance.now();
+      let movement = 0;
+      let reveal = 0.12;
+      let raf = null;
+      let idlePhase = 0;
+      let bag = 0;
+
+      function resize() {
+        const rect = stage.getBoundingClientRect();
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.max(1, Math.floor(rect.width * dpr));
+        canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+        canvas.style.width = rect.width + 'px';
+        canvas.style.height = rect.height + 'px';
+        ctx.setTransform(dpr,0,0,dpr,0,0);
+
+        if (!points.length) {
+          current.x = rect.width * .33;
+          current.y = rect.height * .32;
+          target.x = current.x;
+          target.y = current.y;
+        }
+        setupPath();
+      }
+
+      function setupPath() {
+        [main33, soft33].forEach(path => {
+          const len = path.getTotalLength();
+          path.style.strokeDasharray = len;
+          path.dataset.len = len;
+        });
+        updateReveal();
+      }
+
+      function updateReveal() {
+        [soft33, main33].forEach((path, i) => {
+          const len = Number(path.dataset.len || 1);
+          const localReveal = Math.min(1, reveal + (i === 0 ? .06 : 0));
+          path.style.strokeDashoffset = len * (1 - localReveal);
+        });
+      }
+
+      function addPoint(x,y) {
+        const prev = points[points.length - 1];
+        if (!prev || Math.hypot(x-prev.x, y-prev.y) > 2.2) {
+          points.push({x,y,t:performance.now()});
+          if (points.length > 105) points.shift();
+        }
+      }
+
+      function drawTrail() {
+        const rect = stage.getBoundingClientRect();
+        ctx.clearRect(0,0,rect.width,rect.height);
+        if (points.length < 2) return;
+
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        for (let layer = 0; layer < 2; layer++) {
+          ctx.beginPath();
+          for (let i=0;i<points.length;i++) {
+            const p = points[i];
+            if (i===0) ctx.moveTo(p.x,p.y);
+            else {
+              const prev = points[i-1];
+              const mx = (prev.x+p.x)/2;
+              const my = (prev.y+p.y)/2;
+              ctx.quadraticCurveTo(prev.x, prev.y, mx, my);
+            }
+          }
+          ctx.strokeStyle = layer === 0 ? 'rgba(154,116,88,.16)' : 'rgba(154,116,88,.62)';
+          ctx.lineWidth = layer === 0 ? 7 : 2.2;
+          ctx.stroke();
+        }
+
+        const end = points[points.length-1];
+        ctx.beginPath();
+        ctx.arc(end.x,end.y,3.3,0,Math.PI*2);
+        ctx.fillStyle = 'rgba(154,116,88,.72)';
+        ctx.fill();
+      }
+
+      function localPoint(clientX, clientY) {
+        const r = stage.getBoundingClientRect();
+        return {x: clientX-r.left, y: clientY-r.top, inside: clientX>=r.left && clientX<=r.right && clientY>=r.top && clientY<=r.bottom};
+      }
+
+      function handleMove(clientX, clientY) {
+        const p = localPoint(clientX, clientY);
+        if (!p.inside) return;
+        const dx = p.x-target.x, dy = p.y-target.y;
+        movement += Math.hypot(dx,dy);
+        reveal = Math.min(1, .12 + movement/2400);
+        target.x = p.x;
+        target.y = p.y;
+        lastInput = performance.now();
+        updateReveal();
+      }
+
+      function pop(x,y) {
+        const r = stage.getBoundingClientRect();
+        const p = localPoint(x,y);
+        if (!p.inside) return;
+        const el = document.createElement('div');
+        el.className = 'pop';
+        el.style.left = p.x + 'px';
+        el.style.top = p.y + 'px';
+        el.innerHTML = '<span class="ring"></span><span class="spark">✦</span>';
+        stage.appendChild(el);
+        setTimeout(() => el.remove(), 980);
+      }
+
+      function animate(t) {
+        const rect = stage.getBoundingClientRect();
+
+        if (!finePointer && t-lastInput > 1600 && !reduceMotion) {
+          idlePhase += .012;
+          const baseX = rect.width*.46;
+          const baseY = rect.height*.38;
+          target.x = baseX + Math.sin(idlePhase)*Math.min(90,rect.width*.14);
+          target.y = baseY + Math.cos(idlePhase*.83)*Math.min(58,rect.height*.11);
+          reveal = Math.max(reveal, .72);
+          updateReveal();
+        }
+
+        current.x += (target.x-current.x)*.13;
+        current.y += (target.y-current.y)*.13;
+        addPoint(current.x,current.y);
+        drawTrail();
+
+        if (finePointer) {
+          const r = stage.getBoundingClientRect();
+          const gx = r.left + current.x;
+          const gy = r.top + current.y;
+          needleCursor.style.left = gx + 'px';
+          needleCursor.style.top = gy + 'px';
+        }
+        raf = requestAnimationFrame(animate);
+      }
+
+      if (finePointer) {
+        document.addEventListener('mousemove', (e) => {
+          const p = localPoint(e.clientX, e.clientY);
+          needleCursor.style.opacity = p.inside ? '1' : '0';
+          if (p.inside) handleMove(e.clientX,e.clientY);
+        }, {passive:true});
+
+        stage.addEventListener('mousedown', (e) => pop(e.clientX,e.clientY));
+      } else {
+        stage.addEventListener('pointermove', (e) => {
+          if (e.pointerType === 'touch' || e.pointerType === 'pen') {
+            handleMove(e.clientX,e.clientY);
+          }
+        }, {passive:true});
+        stage.addEventListener('pointerdown', (e) => {
+          handleMove(e.clientX,e.clientY);
+          pop(e.clientX,e.clientY);
+        }, {passive:true});
+      }
+
+      document.querySelectorAll('[data-add]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          bag += 1;
+          bagCount.textContent = bag;
+          const old = btn.textContent;
+          btn.textContent = 'ADDED ✓';
+          setTimeout(() => btn.textContent = old, 950);
+        });
+      });
+
+      window.addEventListener('resize', resize, {passive:true});
+      resize();
+
+      if (reduceMotion) {
+        reveal = .76;
+        updateReveal();
+      }
+
+      raf = requestAnimationFrame(animate);
+    })();
+  </script>
+</body>
+</html>
